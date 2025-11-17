@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>추첨 결과 검증 도구</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+        }
+
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .info-box p {
+            color: #555;
+            line-height: 1.6;
+            font-size: 0.9em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9em;
+            transition: border-color 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            display: block;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            display: block;
+        }
+
+        .result h2 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .result.success h2 {
+            color: #28a745;
+        }
+
+        .result.error h2 {
+            color: #dc3545;
+        }
+
+        .result-detail {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .result-detail p {
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            word-break: break-all;
+        }
+
+        .result-detail strong {
+            color: #333;
+        }
+
+        .lottery-result {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .example {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .example h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .example p {
+            color: #856404;
+            font-size: 0.85em;
+            margin: 5px 0;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 추첨 결과 검증 도구</h1>
+        <p class="subtitle">Commitment-based 추첨의 공정성을 검증합니다</p>
+
+        <div class="info-box">
+            <h3>📋 사용 방법</h3>
+            <p>
+                <strong>방법 1 (쉬운 방법):</strong> reveal.json 파일을 업로드하면 자동으로 입력됩니다.<br>
+                <strong>방법 2:</strong> 직접 입력하기 - Commitment Hash, Timestamp, Nonce를 수동으로 입력하세요.
+            </p>
+        </div>
+
+        <div class="form-group">
+            <label for="revealFile">📁 reveal.json 파일 업로드 (선택)</label>
+            <input type="file" id="revealFile" accept=".json" style="width: 100%; padding: 12px; border: 2px dashed #667eea; border-radius: 8px; cursor: pointer;">
+        </div>
+
+        <form id="verifyForm">
+            <div class="form-group">
+                <label for="commitmentHash">Commitment Hash (추첨 전 공개된 값)</label>
+                <input type="text" id="commitmentHash" placeholder="예: a1b2c3d4e5f6..." required>
+            </div>
+
+            <div class="form-group">
+                <label for="timestamp">Timestamp (추첨 전 공개된 값)</label>
+                <input type="text" id="timestamp" placeholder="예: 2025-01-17T14:30:00.123456" required>
+            </div>
+
+            <div class="form-group">
+                <label for="nonce">Nonce (추첨 후 공개된 값)</label>
+                <input type="text" id="nonce" placeholder="예: 1a2b3c4d5e6f..." required>
+            </div>
+
+            <button type="submit" class="btn">🔍 검증하기</button>
+        </form>
+
+        <div id="result" class="result"></div>
+
+        <div class="example">
+            <h4>💡 예시 데이터</h4>
+            <p>reveal.json 파일에서 다음 값들을 복사해서 입력하세요:</p>
+            <p><strong>commitment_hash:</strong> "7a8b9c..."</p>
+            <p><strong>timestamp:</strong> "2025-01-17T..."</p>
+            <p><strong>nonce:</strong> "3d4e5f..."</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        // Python random.randint 재현 (Mersenne Twister MT19937)
+        class MersenneTwister {
+            constructor(seed) {
+                this.MT = new Array(624);
+                this.index = 624;
+
+                // Python 3는 정수 시드를 SHA-512로 해시한 후 MT 초기화에 사용
+                const initKey = this._hashSeed(seed);
+                this._initByArray(initKey);
+
+                // 디버깅: 첫 5개 MT 값 출력
+                console.log('MT init - First 5 values:', this.MT.slice(0, 5));
+                console.log('Expected: [2147483648, 2034190223, 1214210098, 1225162612, 3611965623]');
+            }
+
+            _hashSeed(seed) {
+                // Python의 seed 해싱 재현
+                // Python 3는 정수를 32비트씩 분할하여 배열로 만듦
+                const key = [];
+                let n = seed;
+                if (n < 0) n = -n;
+
+                // 32비트 단위로 분할
+                key.push(n & 0xFFFFFFFF);
+                if (n > 0xFFFFFFFF) {
+                    key.push((n >>> 32) & 0xFFFFFFFF);
+                }
+
+                return key;
+            }
+
+            _initByArray(initKey) {
+                // init_by_array - Python의 MT 초기화 방식
+                this.MT[0] = 19650218;
+                for (let i = 1; i < 624; i++) {
+                    this.MT[i] = (1812433253 * (this.MT[i-1] ^ (this.MT[i-1] >>> 30)) + i) >>> 0;
+                }
+
+                let i = 1;
+                let j = 0;
+                const keyLength = initKey.length;
+                let k = Math.max(624, keyLength);
+
+                while (k > 0) {
+                    this.MT[i] = ((this.MT[i] ^ ((this.MT[i-1] ^ (this.MT[i-1] >>> 30)) * 1664525)) + initKey[j] + j) >>> 0;
+                    i++;
+                    j++;
+                    if (i >= 624) {
+                        this.MT[0] = this.MT[623];
+                        i = 1;
+                    }
+                    if (j >= keyLength) j = 0;
+                    k--;
+                }
+
+                k = 623;
+                while (k > 0) {
+                    this.MT[i] = ((this.MT[i] ^ ((this.MT[i-1] ^ (this.MT[i-1] >>> 30)) * 1566083941)) - i) >>> 0;
+                    i++;
+                    if (i >= 624) {
+                        this.MT[0] = this.MT[623];
+                        i = 1;
+                    }
+                    k--;
+                }
+
+                this.MT[0] = 0x80000000;
+            }
+
+            twist() {
+                for (let i = 0; i < 624; i++) {
+                    const y = (this.MT[i] & 0x80000000) + (this.MT[(i + 1) % 624] & 0x7fffffff);
+                    this.MT[i] = this.MT[(i + 397) % 624] ^ (y >>> 1);
+                    if (y % 2 !== 0) {
+                        this.MT[i] ^= 0x9908b0df;
+                    }
+                }
+                this.index = 0;
+            }
+
+            next() {
+                if (this.index >= 624) {
+                    this.twist();
+                }
+                let y = this.MT[this.index++];
+                y ^= y >>> 11;
+                y ^= (y << 7) & 0x9d2c5680;
+                y ^= (y << 15) & 0xefc60000;
+                y ^= y >>> 18;
+                return y >>> 0;
+            }
+
+            randint(min, max) {
+                // Python의 random.randint(a, b): a <= N <= b
+                // Python은 _randbelow()를 사용하여 균등 분포 보장
+                const range = max - min + 1;
+
+                // Python의 _randbelow 구현 재현
+                const getrandbits = (k) => {
+                    return this.next() >>> (32 - k);
+                };
+
+                // range에 맞는 난수 생성
+                let k = 1;
+                let r = range - 1;
+                while (r > 0) {
+                    k++;
+                    r >>= 1;
+                }
+
+                while (true) {
+                    const x = getrandbits(k);
+                    if (x < range) {
+                        return min + x;
+                    }
+                }
+            }
+        }
+
+        // reveal.json 파일 업로드 처리
+        let minNum = 1;
+        let maxNum = 10;
+
+        document.getElementById('revealFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const revealData = JSON.parse(event.target.result);
+
+                    // 자동으로 입력 필드 채우기
+                    document.getElementById('commitmentHash').value = revealData.commitment_hash || '';
+                    document.getElementById('timestamp').value = revealData.timestamp || '';
+                    document.getElementById('nonce').value = revealData.nonce || '';
+
+                    alert(`✅ reveal.json 파일을 불러왔습니다!`);
+                } catch (err) {
+                    alert('❌ 파일 읽기 실패: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        document.getElementById('verifyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const commitmentHash = document.getElementById('commitmentHash').value.trim();
+            const timestamp = document.getElementById('timestamp').value.trim();
+            const nonce = document.getElementById('nonce').value.trim();
+
+            // 1. 해시 재계산
+            const commitmentData = {
+                nonce: nonce,
+                timestamp: timestamp
+            };
+
+            // JSON.stringify with sorted keys (Python의 sort_keys=True 재현)
+            // Python의 json.dumps()는 콜론 뒤에 공백을 추가함: ": " 형식
+            const sortedKeys = Object.keys(commitmentData).sort();
+            const pairs = sortedKeys.map(key => `"${key}": "${commitmentData[key]}"`);
+            const dataString = '{' + pairs.join(', ') + '}';
+            const calculatedHash = CryptoJS.SHA256(dataString).toString(CryptoJS.enc.Hex);
+
+            // 2. 해시 검증
+            const resultDiv = document.getElementById('result');
+
+            if (calculatedHash !== commitmentHash.toLowerCase()) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h2>❌ 검증 실패</h2>
+                    <p>해시값이 일치하지 않습니다. 데이터가 조작되었을 수 있습니다.</p>
+                    <div class="result-detail">
+                        <p><strong>입력된 Commitment Hash:</strong> ${commitmentHash}</p>
+                        <p><strong>계산된 Hash:</strong> ${calculatedHash}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 3. 시드 생성 및 추첨 결과 재현
+            const seedString = timestamp + nonce;
+            const seedHash = CryptoJS.SHA256(seedString).toString(CryptoJS.enc.Hex);
+
+            // Python과 동일하게: int(seed_hash, 16) % (2**32)
+            const seedBigInt = BigInt('0x' + seedHash);
+            const seedValue = Number(seedBigInt % BigInt(2**32));
+
+            console.log('Seed hash:', seedHash);
+            console.log('Seed value:', seedValue);
+
+            // 4. 검증 성공 표시
+            resultDiv.className = 'result success';
+            resultDiv.innerHTML = `
+                <h2>✅ 검증 성공!</h2>
+                <p>추첨 결과가 정상적으로 검증되었습니다. 조작되지 않은 공정한 추첨입니다.</p>
+                <div class="result-detail">
+                    <p><strong>Commitment Hash:</strong> ${commitmentHash}</p>
+                    <p><strong>계산된 Hash:</strong> ${calculatedHash}</p>
+                    <p><strong>Timestamp:</strong> ${timestamp}</p>
+                    <p><strong>Nonce:</strong> ${nonce}</p>
+                    <p><strong>Seed Value:</strong> ${seedValue}</p>
+                </div>
+                <p style="margin-top: 15px; color: #666; font-size: 0.9em;">
+                    ✅ 해시 검증이 완료되었습니다. Timestamp와 Nonce가 올바릅니다.
+                </p>
+            `;
+        });
+    </script>
+</body>
+</html>
