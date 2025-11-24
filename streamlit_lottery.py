@@ -7,7 +7,7 @@ import streamlit as st
 import random
 import hashlib
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 # 페이지 설정
 st.set_page_config(
@@ -73,6 +73,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# 한국 타임존 (KST = UTC+9)
+KST = timezone(timedelta(hours=9))
+
 # 세션 상태 초기화
 if 'commitment_data' not in st.session_state:
     st.session_state.commitment_data = None
@@ -84,8 +87,8 @@ def generate_commitment():
     """Commitment 생성"""
     import os
 
-    # 현재 시간 + 랜덤 nonce 생성
-    draw_time = datetime.now()
+    # 한국 시간으로 현재 시간 생성
+    draw_time = datetime.now(KST)
     nonce = os.urandom(32).hex()
 
     # Commitment 데이터
@@ -214,6 +217,7 @@ with tab1:
             <li>Nonce는 2단계(추첨 실행) 전까지 절대 공개하면 안됩니다.</li>
             <li>공개 방법: 블로그, SNS, 스크린샷 등 변경 불가능한 증거 남기기</li>
             <li>1단계와 2단계 사이에는 충분한 시간을 두고 참가자를 모집하세요.</li>
+            <li><strong>⏰ 모든 시각은 한국 표준시(KST, UTC+9)로 표시됩니다.</strong></li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -270,9 +274,12 @@ with tab2:
         # Timestamp
         timestamp = st.session_state.commitment_data['timestamp']
         draw_time = datetime.fromisoformat(timestamp)
-        st.markdown("**⏰ 생성 시각:**")
-        st.code(f"{draw_time.strftime('%Y년 %m월 %d일 %H시 %M분 %S초')} (KST)", language=None)
-        st.code(f"ISO 8601: {timestamp}", language=None)
+        st.markdown("**⏰ 생성 시각 (한국시간 KST):**")
+        st.code(f"{draw_time.strftime('%Y년 %m월 %d일 %H시 %M분 %S초')} KST (한국시간)", language=None)
+        st.code(f"ISO 8601 (타임존 포함): {timestamp}", language=None)
+
+        # 타임존 정보 추가 설명
+        st.info("💡 생성된 시각은 한국 표준시(KST, UTC+9)입니다. ISO 8601 형식에 타임존(+09:00)이 포함되어 있습니다.")
 
         st.markdown("---")
 
@@ -392,8 +399,11 @@ with tab3:
             st.markdown("**✅ Commitment Hash (1단계에서 공개한 값):**")
             st.code(st.session_state.reveal_data["commitment_hash"], language=None)
 
-            st.markdown("**⏰ Timestamp (1단계에서 공개한 값):**")
-            st.code(st.session_state.reveal_data["timestamp"], language=None)
+            st.markdown("**⏰ Timestamp (1단계에서 공개한 값, KST 한국시간):**")
+            # 시간을 한국시간으로 파싱해서 보기 좋게 표시
+            reveal_time = datetime.fromisoformat(st.session_state.reveal_data["timestamp"])
+            st.code(f"{reveal_time.strftime('%Y년 %m월 %d일 %H시 %M분 %S초')} KST", language=None)
+            st.code(f"ISO 8601: {st.session_state.reveal_data['timestamp']}", language=None)
 
             st.markdown("**🔓 Nonce (지금 공개하는 값):**")
             st.code(st.session_state.reveal_data["nonce"], language=None)
